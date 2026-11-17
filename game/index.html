@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal Master: Crossing Keeper</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0e1a26; font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", system-ui, sans-serif; }
+  #wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; width: min(100vw, 177.78vh); aspect-ratio: 16 / 9; }
+  #game { width: 100%; height: 100%; display: block; background: #87c5e8; border-radius: 4px; }
+  .hud { position: absolute; top: 1.6%; left: 1.6%; right: 1.6%; display: flex; gap: 8px; align-items: stretch; pointer-events: none; }
+  .chip { background: rgba(10, 25, 40, .82); color: #fff; border-radius: 10px; padding: 6px 12px; font-weight: 700; font-size: clamp(11px, 1.9vmin, 17px); letter-spacing: .04em; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .chip small { display: block; font-size: .62em; font-weight: 600; color: #9fd8ff; letter-spacing: .12em; }
+  .chip .bar { margin-top: 4px; width: 110px; height: 7px; background: rgba(255,255,255,.22); border-radius: 4px; overflow: hidden; }
+  .chip .bar i { display: block; height: 100%; background: #ffd94d; border-radius: 4px; }
+  #lives { color: #ff8fa3; letter-spacing: .15em; }
+  .spacer { flex: 1; }
+  .controls { position: absolute; left: 50%; transform: translateX(-50%); bottom: 2%; display: flex; gap: 10px; }
+  .controls button { pointer-events: auto; cursor: pointer; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 800; font-size: clamp(12px, 2vmin, 17px); color: #10222f; background: #ffd94d; box-shadow: 0 4px 0 #c9a227, 0 6px 14px rgba(0,0,0,.3); }
+  .controls button:active { transform: translateY(3px); box-shadow: 0 1px 0 #c9a227; }
+  .controls button.sigA { background: #7be3c3; box-shadow: 0 4px 0 #3da583, 0 6px 14px rgba(0,0,0,.3); }
+  .controls button.sigB { background: #ffb37b; box-shadow: 0 4px 0 #c97b3d, 0 6px 14px rgba(0,0,0,.3); }
+  .controls button.util { background: #dfe9f2; box-shadow: 0 4px 0 #9fb4c4, 0 6px 14px rgba(0,0,0,.3); padding: 10px 12px; }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(8, 20, 34, .55); color: #fff; padding: 4%; box-sizing: border-box; }
+  .overlay h1 { margin: 0 0 4px; font-size: clamp(26px, 6vmin, 54px); letter-spacing: .03em; text-shadow: 0 3px 0 rgba(0,0,0,.35); }
+  .overlay h1 .accent { color: #ffd94d; }
+  .overlay p { margin: 6px 0; font-size: clamp(12px, 2.2vmin, 18px); line-height: 1.55; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .overlay .rules { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 14px; padding: 10px 18px; margin: 10px 0 14px; }
+  .overlay .rules b { color: #ffd94d; }
+  .bigbtn { cursor: pointer; border: none; border-radius: 14px; padding: 14px 34px; font-size: clamp(16px, 2.8vmin, 24px); font-weight: 900; color: #10222f; background: #ffd94d; box-shadow: 0 5px 0 #c9a227, 0 8px 18px rgba(0,0,0,.35); }
+  .bigbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c9a227; }
+  .hidden { display: none !important; }
+  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="game" width="960" height="540" aria-label="Signal Master: Crossing Keeper. Work the crossing gates and the two track signals so trains and cars pass safely."></canvas>
+
+    <div class="hud">
+      <div class="chip"><small>SCORE</small><span id="score">0</span></div>
+      <div class="chip"><small>TARGET</small>1,200</div>
+      <div class="chip"><small>TIME</small><span id="time">120</span><div class="bar"><i id="timebar" style="width:100%"></i></div></div>
+      <div class="chip"><small>SAFETY</small><span id="lives">♥♥♥</span></div>
+      <div class="spacer"></div>
+      <div class="chip"><small>NEXT TRAIN</small><span id="next">—</span></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnSigA" class="sigA" title="Cycle the upper track signal (key: A)">🚦 SIGNAL A</button>
+      <button id="btnGate" title="Raise or lower the crossing gates (key: Space)">⛔ GATE ⛔</button>
+      <button id="btnSigB" class="sigB" title="Cycle the lower track signal (key: L)">🚦 SIGNAL B</button>
+      <button id="btnMute" class="util" title="Sound on or off (key: M)">🔊</button>
+      <button id="btnPause" class="util" title="Pause (key: P)">⏸</button>
+    </div>
+
+    <div id="title" class="overlay">
+      <h1>🚦 SIGNAL <span class="accent">MASTER</span></h1>
+      <p><b>Crossing Keeper</b> — one crossing, two tracks, rush-hour traffic.<br>You work the gates and the signals. Keep everybody safe!</p>
+      <div class="rules">
+        <p>⛔ <b>GATE</b> (Space): lower the gates before a train reaches the crossing<br>
+        🚦 <b>SIGNAL A / B</b> (A / L keys): green = go, yellow = slow, red = stop the train<br>
+        🚂 Train through safely <b>+120</b> ・ 🚗 Car across safely <b>+40</b> ・ 💥 Crash <b>−1 safety</b><br>
+        Reach <b>1,200 points in 120 seconds</b> to clear your shift. Three crashes end it!</p>
+      </div>
+      <button id="btnStart" class="bigbtn">▶ START SHIFT</button>
+      <p style="font-size:.8em; opacity:.85">Keyboard &amp; mouse ・ Sound: M ・ Pause: P</p>
+    </div>
+
+    <div id="ending" class="overlay hidden">
+      <h1 id="endTitle">🎉 SHIFT CLEAR!</h1>
+      <p id="endText"></p>
+      <button id="btnRestart" class="bigbtn">↻ PLAY AGAIN (R)</button>
+    </div>
+
+    <div id="paused" class="overlay hidden">
+      <h1>⏸ PAUSED</h1>
+      <p>Press P or the pause button to resume.</p>
+    </div>
+  </div>
+</div>
+<p id="status" role="status" aria-live="polite"></p>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
