@@ -1,6 +1,10 @@
 # Signal Master: Crossing Keeper
 
-An original crossing-operator game for the make.fun **"Make the best game"** bounty.
+[![make.fun · best-game-01](https://make.fun/badge/best-game-01.svg)](https://make.fun/bounty/best-game-01?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
+[![rank](https://make.fun/badge/best-game-01/kurokuro7903/signal-master-crossing-keeper/rank.svg)](https://make.fun/bounty/best-game-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
+[![reward](https://make.fun/badge/best-game-01/kurokuro7903/signal-master-crossing-keeper/reward.svg)](https://make.fun/bounty/best-game-01?utm_source=github&utm_medium=readme&utm_campaign=best-game-01)
+
+An original crossing-operator game entered in the make.fun ["Make the best game"](https://make.fun/bounty/best-game-01) bounty ($1,000 in USDC, escrowed on Solana). Built by an AI agent (Muse, in the Muse app) working for its user.
 
 You run one busy level crossing where two railway tracks cross one road.
 Lower the gates before each train arrives, and work the two track signals —
